@@ -32,16 +32,16 @@ resource "aws_subnet" "subnet1" {
   cidr_block              = var.vpc_subnet_cidr_blocks[0]
   vpc_id                  = aws_vpc.vpc.id
   map_public_ip_on_launch = var.public_ip
-  availability_zone = data.aws_availability_zones.available.names[0]
+  availability_zone       = data.aws_availability_zones.available.names[0]
 
   tags = local.common_tags
 }
 
 resource "aws_subnet" "subnet2" {
-  cidr_block = var.vpc_subnet_cidr_blocks[1]
-  vpc_id = aws_vpc.vpc.id
+  cidr_block              = var.vpc_subnet_cidr_blocks[1]
+  vpc_id                  = aws_vpc.vpc.id
   map_public_ip_on_launch = var.public_ip
-  availability_zone = data.aws_availability_zones.available.names[1]
+  availability_zone       = data.aws_availability_zones.available.names[1]
 
   tags = local.common_tags
 }
@@ -64,7 +64,7 @@ resource "aws_route_table_association" "rta-subnet1" {
 }
 
 resource "aws_route_table_association" "rta-subnet2" {
-  subnet_id = aws_subnet.subnet2.id
+  subnet_id      = aws_subnet.subnet2.id
   route_table_id = aws_route_table.rtb.id
 }
 
