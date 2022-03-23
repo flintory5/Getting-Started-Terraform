@@ -16,6 +16,12 @@ variable "vpc_cidr_block" {
   default     = "10.0.0.0/16"
 }
 
+variable "vpc_subnet_count" {
+  type = number
+  description = "Number of subnets to create"
+  default = 2
+}
+
 variable "vpc_dns_hostnames" {
   type        = bool
   description = "Enable DNS Hostnames for vpc"
@@ -66,6 +72,12 @@ variable "nginx_instance_type" {
   type        = string
   description = "EC2 Instance type for NGINX"
   default     = "t2.micro"
+}
+
+variable "nginx_instance_count" {
+  type = number
+  description = "EC2 Instance count for NGINX"
+  default = 2
 }
 
 variable "company" {
