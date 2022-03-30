@@ -15,59 +15,35 @@ data "aws_availability_zones" "available" {
 ##################################################################################
 
 # NETWORKING #
-resource "aws_vpc" "vpc" {
-  cidr_block           = var.vpc_cidr_block
-  enable_dns_hostnames = var.vpc_dns_hostnames
+module "vpc" {
+  source  = "terraform-aws-modules/vpc/aws"
+  version = "3.10.0"
 
-  tags = local.common_tags
-}
+  cidr = var.vpc_cidr_block[terraform.workspace]
 
-resource "aws_internet_gateway" "igw" {
-  vpc_id = aws_vpc.vpc.id
+  azs            = slice(data.aws_availability_zones.available.names, 0, (var.vpc_subnet_count[terraform.workspace]))
+  public_subnets = [for subnet in range(var.vpc_subnet_count[terraform.workspace]) : cidrsubnet(var.vpc_cidr_block[terraform.workspace], 8, subnet)]
 
-  tags = local.common_tags
-}
+  enable_nat_gateway = false
+  enable_vpn_gateway = false
 
-resource "aws_subnet" "subnets" {
-  count                   = var.vpc_subnet_count
-  cidr_block              = var.vpc_subnet_cidr_blocks[count.index]
-  vpc_id                  = aws_vpc.vpc.id
-  map_public_ip_on_launch = var.public_ip
-  availability_zone       = data.aws_availability_zones.available.names[count.index]
-
-  tags = local.common_tags
-}
-
-# ROUTING #
-resource "aws_route_table" "rtb" {
-  vpc_id = aws_vpc.vpc.id
-
-  route {
-    cidr_block = var.route_table_cidr_block
-    gateway_id = aws_internet_gateway.igw.id
-  }
-
-  tags = local.common_tags
-}
-
-resource "aws_route_table_association" "rta-subnets" {
-  count          = var.vpc_subnet_count
-  subnet_id      = aws_subnet.subnets[count.index].id
-  route_table_id = aws_route_table.rtb.id
+  tags = merge(local.common_tags, {
+    Name = "${local.name_prefix}-vpc"
+  })
 }
 
 # SECURITY GROUPS #
 # Nginx security group 
 resource "aws_security_group" "nginx-sg" {
   name   = var.nginx_security_group.sg_name
-  vpc_id = aws_vpc.vpc.id
+  vpc_id = module.vpc.vpc_id
 
   # HTTP access from only vpc address - we just want traffic from the load balancer
   ingress {
     from_port   = 80
     to_port     = 80
     protocol    = var.nginx_security_group.ingress_protocol
-    cidr_blocks = [var.vpc_cidr_block]
+    cidr_blocks = [var.vpc_cidr_block[terraform.workspace]]
   }
 
   # outbound internet access
@@ -83,7 +59,7 @@ resource "aws_security_group" "nginx-sg" {
 
 resource "aws_security_group" "alb-sg" {
   name   = "nginx_alb_sg"
-  vpc_id = aws_vpc.vpc.id
+  vpc_id = module.vpc.vpc_id
 
   # HTTP access from anywhere
   ingress {

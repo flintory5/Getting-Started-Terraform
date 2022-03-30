@@ -7,12 +7,12 @@ resource "aws_lb" "nginx" {
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb-sg.id]
-  subnets            = [aws_subnet.subnet1.id, aws_subnet.subnet2.id]
+  subnets            = module.vpc.public_subnets
 
   enable_deletion_protection = false
 
   access_logs {
-    bucket  = aws_s3_bucket.web_bucket.bucket
+    bucket  = module.web_app_s3.bucket_object.id
     prefix  = "alb-logs"
     enabled = true
   }
@@ -25,7 +25,7 @@ resource "aws_lb_target_group" "nginx_lb_tg" {
   name     = "globo-web-lb-tg"
   port     = var.alb_tg_port
   protocol = var.alb_tg_protocol
-  vpc_id   = aws_vpc.vpc.id
+  vpc_id   = module.vpc.vpc_id
 }
 
 ## aws_lb_listener
@@ -44,7 +44,7 @@ resource "aws_lb_listener" "nginx" {
 
 ## aws_lb_target_group_attachment
 resource "aws_lb_target_group_attachment" "nginx-lb-tg-attachments" {
-  count = var.nginx_instance_count
+  count            = var.nginx_instance_count[terraform.workspace]
   target_group_arn = aws_lb_target_group.nginx_lb_tg.arn
   target_id        = aws_instance.nginx-instances[count.index].id
   port             = 80

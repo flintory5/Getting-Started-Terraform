@@ -1,3 +1,9 @@
+variable "naming_prefix" {
+  type        = string
+  description = "Naming prefix for all resources"
+  default     = "globoweb"
+}
+
 variable "aws_region" {
   type        = string
   description = "AWS Region to use for resources"
@@ -11,15 +17,13 @@ variable "ami_name" {
 }
 
 variable "vpc_cidr_block" {
-  type        = string
+  type        = map(string)
   description = "CIDR Block for the VPC"
-  default     = "10.0.0.0/16"
 }
 
 variable "vpc_subnet_count" {
-  type = number
+  type        = map(number)
   description = "Number of subnets to create"
-  default = 2
 }
 
 variable "vpc_dns_hostnames" {
@@ -69,15 +73,13 @@ variable "nginx_security_group" {
 }
 
 variable "nginx_instance_type" {
-  type        = string
+  type        = map(string)
   description = "EC2 Instance type for NGINX"
-  default     = "t2.micro"
 }
 
 variable "nginx_instance_count" {
-  type = number
+  type        = map(number)
   description = "EC2 Instance count for NGINX"
-  default = 2
 }
 
 variable "company" {
